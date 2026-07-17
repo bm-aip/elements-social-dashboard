@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elements Senior Living — Social Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:        #0D0D0D;
+    --surface:   #141414;
+    --card:      #1A1A1A;
+    --border:    #2A2A2A;
+    --gold:      #C9A84C;
+    --gold-dim:  #7A6230;
+    --cream:     #F0E8D5;
+    --muted:     #888;
+    --fb:        #1877F2;
+    --ig:        #E1306C;
+    --yt:        #FF0000;
+    --positive:  #3DBA7E;
+    --negative:  #E05C5C;
+    --text:      #EAEAEA;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    backdrop-filter: blur(12px);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--cream);
+    text-transform: uppercase;
+  }
+
+  .wordmark span {
+    color: var(--gold);
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .last-updated {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: var(--gold); color: var(--bg); }
+  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── LAYOUT ── */
+  main { padding: 40px; max-width: 1400px; margin: 0 auto; }
+
+  section + section { margin-top: 56px; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── PLATFORM RIBBONS ── */
+  .platform-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .platform-card {
+    background: var(--card);
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .platform-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+  }
+  .platform-card.youtube::before  { background: var(--yt); }
+  .platform-card.facebook::before { background: var(--fb); }
+  .platform-card.instagram::before {
+    background: linear-gradient(90deg, #833ab4, #fd1d1d, #fcb045);
+  }
+
+  .platform-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .platform-name .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .youtube .dot  { background: var(--yt); }
+  .facebook .dot { background: var(--fb); }
+  .instagram .dot { background: var(--ig); }
+
+  .platform-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .metric-item { }
+  .metric-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--cream);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .metric-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+  .metric-delta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    margin-top: 6px;
+  }
+  .metric-delta.pos { color: var(--positive); }
+  .metric-delta.neg { color: var(--negative); }
+  .metric-delta.neu { color: var(--muted); }
+
+  /* ── CHART SECTION ── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .chart-card {
+    background: var(--card);
+    padding: 28px;
+  }
+
+  .chart-title {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+
+  .chart-container { height: 140px; position: relative; }
+
+  /* ── POSTS TABLE ── */
+  .tab-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--cream); }
+  .tab-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .posts-table-wrap {
+    background: var(--card);
+    margin-top: 0;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 400;
+  }
+
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .post-thumb {
+    width: 48px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 2px;
+    background: var(--border);
+  }
+
+  .post-title {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--cream);
+    font-size: 13px;
+  }
+
+  .post-link {
+    color: var(--gold-dim);
+    text-decoration: none;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-family: 'DM Mono', monospace;
+  }
+  .post-link:hover { color: var(--gold); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+  .badge-yt  { background: rgba(255,0,0,0.15);   color: #FF6B6B; }
+  .badge-fb  { background: rgba(24,119,242,0.15); color: #5BA5FF; }
+  .badge-ig  { background: rgba(225,48,108,0.15); color: #FF7DAD; }
+
+  .num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--cream);
+  }
+
+  .eng-rate {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .eng-high { color: var(--positive); }
+  .eng-mid  { color: var(--gold); }
+  .eng-low  { color: var(--muted); }
+
+  .empty-state {
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.3;
+  }
+
+  /* ── LOADING ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 2px;
+    height: 36px;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .loading-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .loading-spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 960px) {
+    main { padding: 20px; }
+    header { padding: 20px; }
+    .platform-grid, .chart-grid { grid-template-columns: 1fr; }
+    .platform-metrics { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<header>
+  <div class="header-left">
+    <div>
+      <div class="eyebrow">Social Intelligence</div>
+      <div class="wordmark">Elements <span>Senior Living</span></div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="lastUpdated">—</div>
+    <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">↻ Refresh</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- PLATFORM SUMMARY -->
+  <section>
+    <div class="section-label">Platform Overview · 28-day window</div>
+    <div class="platform-grid">
+
+      <div class="platform-card youtube">
+        <div class="platform-name">
+          <span class="dot"></span> YouTube
+        </div>
+        <div class="platform-metrics">
+          <div class="metric-item">
+            <div class="metric-value" id="yt-subs">—</div>
+            <div class="metric-label">Subscribers</div>
+            <div class="metric-delta neu" id="yt-subs-delta">—</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="yt-views">—</div>
+            <div class="metric-label">Views (28d)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="yt-watchtime">—</div>
+            <div class="metric-label">Watch Time (hrs)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="yt-videos">—</div>
+            <div class="metric-label">Total Videos</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform-card facebook">
+        <div class="platform-name">
+          <span class="dot"></span> Facebook
+        </div>
+        <div class="platform-metrics">
+          <div class="metric-item">
+            <div class="metric-value" id="fb-followers">—</div>
+            <div class="metric-label">Followers</div>
+            <div class="metric-delta neu" id="fb-followers-delta">—</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="fb-reach">—</div>
+            <div class="metric-label">Reach (28d)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="fb-impressions">—</div>
+            <div class="metric-label">Impressions (28d)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="fb-engagement">—</div>
+            <div class="metric-label">Engagements</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform-card instagram">
+        <div class="platform-name">
+          <span class="dot"></span> Instagram
+        </div>
+        <div class="platform-metrics">
+          <div class="metric-item">
+            <div class="metric-value" id="ig-followers">—</div>
+            <div class="metric-label">Followers</div>
+            <div class="metric-delta neu" id="ig-followers-delta">—</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="ig-reach">—</div>
+            <div class="metric-label">Reach (28d)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="ig-impressions">—</div>
+            <div class="metric-label">Impressions (28d)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="ig-engagement">—</div>
+            <div class="metric-label">Engagements</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOLLOWER TREND CHARTS -->
+  <section>
+    <div class="section-label">Follower Growth · 90-day trend</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">YouTube Subscribers</div>
+        <div class="chart-container"><canvas id="chartYT"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Facebook Followers</div>
+        <div class="chart-container"><canvas id="chartFB"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Instagram Followers</div>
+        <div class="chart-container"><canvas id="chartIG"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSTS TABLE -->
+  <section>
+    <div class="section-label">Content Performance</div>
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('all', this)">All</button>
+      <button class="tab-btn" onclick="switchTab('youtube', this)">YouTube</button>
+      <button class="tab-btn" onclick="switchTab('facebook', this)">Facebook</button>
+      <button class="tab-btn" onclick="switchTab('instagram', this)">Instagram</button>
+    </div>
+    <div class="posts-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>—</th>
+            <th>Platform</th>
+            <th>Content</th>
+            <th>Views</th>
+            <th>Likes</th>
+            <th>Comments</th>
+            <th>Shares</th>
+            <th>Eng Rate</th>
+            <th>Published</th>
+            <th>—</th>
+          </tr>
+        </thead>
+        <tbody id="postsTableBody">
+          <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">◌</div>Loading content data...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ── State ──
+let summaryData = {};
+let postsData = {};
+let charts = {};
+let currentTab = 'all';
+
+// ── Utils ──
+function fmt(n) {
+  if (n == null || n === 0) return '0';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toLocaleString('en-IN');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+}
+
+function engClass(rate) {
+  if (rate >= 3) return 'eng-high';
+  if (rate >= 1) return 'eng-mid';
+  return 'eng-low';
+}
+
+function setBadge(platform) {
+  const map = { youtube: 'badge-yt', facebook: 'badge-fb', instagram: 'badge-ig' };
+  const label = { youtube: 'YT', facebook: 'FB', instagram: 'IG' };
+  return `<span class="badge ${map[platform]}">${label[platform]}</span>`;
+}
+
+function setLoading(on) {
+  document.getElementById('loadingOverlay').classList.toggle('active', on);
+  document.getElementById('refreshBtn').disabled = on;
+}
+
+// ── Fetch Summary ──
+async function loadSummary() {
+  try {
+    const res = await fetch('/api/summary');
+    summaryData = await res.json();
+    renderSummary();
+  } catch (e) {
+    console.error('Summary fetch error:', e);
+  }
+}
+
+function renderSummary() {
+  const yt = summaryData.youtube || {};
+  const fb = summaryData.facebook || {};
+  const ig = summaryData.instagram || {};
+
+  // YouTube
+  set('yt-subs', fmt(yt.followers));
+  set('yt-views', fmt(yt.reach_28d));
+  set('yt-watchtime', fmt(Math.round((yt.watch_time_minutes || 0) / 60)));
+  set('yt-videos', fmt(yt.video_views > 0 ? yt.video_views : 0));
+
+  // Facebook
+  set('fb-followers', fmt(fb.followers));
+  set('fb-reach', fmt(fb.reach_28d));
+  set('fb-impressions', fmt(fb.impressions_28d));
+  set('fb-engagement', fmt(fb.engagement_total));
+
+  // Instagram
+  set('ig-followers', fmt(ig.followers));
+  set('ig-reach', fmt(ig.reach_28d));
+  set('ig-impressions', fmt(ig.impressions_28d));
+  set('ig-engagement', fmt(ig.engagement_total));
+
+  // Last updated
+  const times = [yt.last_updated, fb.last_updated, ig.last_updated].filter(Boolean);
+  if (times.length) {
+    const latest = new Date(Math.max(...times.map(t => new Date(t))));
+    document.getElementById('lastUpdated').textContent =
+      'Updated ' + latest.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val ?? '—';
+}
+
+// ── Fetch Posts ──
+async function loadPosts(platform = 'all') {
+  try {
+    const res = await fetch(`/api/posts/${platform}`);
+    const data = await res.json();
+    postsData[platform] = data;
+    renderPosts(data);
+  } catch (e) {
+    console.error('Posts fetch error:', e);
+  }
+}
+
+function renderPosts(posts) {
+  const tbody = document.getElementById('postsTableBody');
+  if (!posts || posts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">
+      <div class="empty-icon">◌</div>No content data yet. Trigger a refresh to fetch posts.
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = posts.map(p => `
+    <tr>
+      <td>
+        ${p.thumbnail
+          ? `<img class="post-thumb" src="${p.thumbnail}" alt="" loading="lazy" onerror="this.style.display='none'">`
+          : '<div class="post-thumb"></div>'
+        }
+      </td>
+      <td>${setBadge(p.platform)}</td>
+      <td><div class="post-title" title="${(p.title || '').replace(/"/g, '&quot;')}">${p.title || '<em style="color:var(--muted)">No caption</em>'}</div></td>
+      <td><span class="num">${fmt(p.views)}</span></td>
+      <td><span class="num">${fmt(p.likes)}</span></td>
+      <td><span class="num">${fmt(p.comments)}</span></td>
+      <td><span class="num">${fmt(p.shares)}</span></td>
+      <td><span class="eng-rate ${engClass(p.engagement_rate)}">${p.engagement_rate?.toFixed(2)}%</span></td>
+      <td style="color:var(--muted);font-size:12px">${fmtDate(p.published_at)}</td>
+      <td>${p.post_url ? `<a href="${p.post_url}" target="_blank" class="post-link">↗ Open</a>` : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Tabs ──
+function switchTab(platform, btn) {
+  currentTab = platform;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (postsData[platform]) {
+    renderPosts(postsData[platform]);
+  } else {
+    loadPosts(platform);
+  }
+}
+
+// ── Charts ──
+async function loadCharts() {
+  const platforms = ['youtube', 'facebook', 'instagram'];
+  const metrics   = ['subscribers', 'followers', 'followers'];
+  const canvases  = ['chartYT', 'chartFB', 'chartIG'];
+  const colors    = ['rgba(255,0,0,0.8)', 'rgba(24,119,242,0.8)', 'rgba(225,48,108,0.8)'];
+
+  for (let i = 0; i < 3; i++) {
+    try {
+      const res = await fetch(`/api/snapshots/${platforms[i]}/${metrics[i]}`);
+      const rows = await res.json();
+
+      const labels = rows.map(r => fmtDate(r.captured_at));
+      const values = rows.map(r => r.metric_value);
+
+      const canvas = document.getElementById(canvases[i]);
+      if (!canvas) continue;
+
+      if (charts[canvases[i]]) charts[canvases[i]].destroy();
+
+      charts[canvases[i]] = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            borderColor: colors[i],
+            backgroundColor: colors[i].replace('0.8)', '0.06)'),
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: {
+            callbacks: {
+              label: ctx => fmt(ctx.raw)
+            }
+          }},
+          scales: {
+            x: { display: false },
+            y: {
+              display: true,
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: {
+                color: '#666',
+                font: { family: 'DM Mono', size: 9 },
+                callback: v => fmt(v)
+              }
+            }
+          }
+        }
+      });
+
+      // If no data, show placeholder
+      if (rows.length === 0) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#333';
+        ctx.font = '11px DM Sans';
+        ctx.fillText('No history yet', 20, 70);
+      }
+
+    } catch (e) {
+      console.error(`Chart error for ${platforms[i]}:`, e);
+    }
+  }
+}
+
+// ── Refresh ──
+async function triggerRefresh() {
+  if (!confirm('Pull fresh data from all platforms? This may take 30–60 seconds.')) return;
+  setLoading(true);
+  try {
+    const res = await fetch('/api/refresh', { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      postsData = {};
+      await Promise.all([loadSummary(), loadPosts(currentTab), loadCharts()]);
+    } else {
+      alert('Refresh failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Init ──
+async function init() {
+  await Promise.all([
+    loadSummary(),
+    loadPosts('all'),
+    loadCharts()
+  ]);
+}
+
+init();
+</script>
+</body>
+</html>
