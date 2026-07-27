@@ -98,8 +98,12 @@ def get_instagram_account_id():
     }
     r = requests.get(url, params=params, timeout=15)
     data = r.json()
+    if "error" in data:
+        logger.error(f"Graph API error fetching IG account: {data['error']}")
+        return None
     if "instagram_business_account" in data:
         return data["instagram_business_account"]["id"]
+    logger.warning(f"No instagram_business_account field in response: {data}")
     return None
 
 
