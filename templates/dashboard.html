@@ -105,6 +105,22 @@
   .refresh-btn:hover { background: var(--gold); color: var(--bg); }
   .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* ── STATUS CHIP ── */
+  .status-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-left: auto;
+    white-space: nowrap;
+    color: var(--muted);
+  }
+  .status-chip.ok   { background: rgba(61,186,126,0.14); color: var(--positive); }
+  .status-chip.warn { background: rgba(201,168,76,0.16); color: var(--gold); }
+  .status-chip.bad  { background: rgba(224,92,92,0.16);  color: var(--negative); }
+
   /* ── LAYOUT ── */
   main { padding: 40px; max-width: 1400px; margin: 0 auto; }
 
@@ -427,6 +443,7 @@
       <div class="platform-card youtube">
         <div class="platform-name">
           <span class="dot"></span> YouTube
+          <span class="status-chip" id="yt-status">—</span>
         </div>
         <div class="platform-metrics">
           <div class="metric-item">
@@ -452,6 +469,7 @@
       <div class="platform-card facebook">
         <div class="platform-name">
           <span class="dot"></span> Facebook
+          <span class="status-chip" id="fb-status">—</span>
         </div>
         <div class="platform-metrics">
           <div class="metric-item">
@@ -477,6 +495,7 @@
       <div class="platform-card instagram">
         <div class="platform-name">
           <span class="dot"></span> Instagram
+          <span class="status-chip" id="ig-status">—</span>
         </div>
         <div class="platform-metrics">
           <div class="metric-item">
@@ -604,35 +623,89 @@ async function loadSummary() {
   }
 }
 
+// Missing metric → "—"; a real 0 stays "0". This is the difference between
+// "we couldn't fetch this" and "this is genuinely zero".
+function metric(n) {
+  if (n === null || n === undefined) return '—';
+  return fmt(n);
+}
+
+function relTime(iso) {
+  if (!iso) return 'never';
+  const diff = Date.now() - new Date(iso).getTime();
+  const h = diff / 3.6e6;
+  if (h < 1) return Math.max(1, Math.round(diff / 6e4)) + 'm ago';
+  if (h < 48) return Math.round(h) + 'h ago';
+  return Math.round(h / 24) + 'd ago';
+}
+
+function renderDelta(id, delta) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (delta === null || delta === undefined || delta === 0) {
+    el.textContent = '—'; el.className = 'metric-delta neu'; return;
+  }
+  const up = delta > 0;
+  el.textContent = (up ? '▲ ' : '▼ ') + fmt(Math.abs(delta));
+  el.className = 'metric-delta ' + (up ? 'pos' : 'neg');
+}
+
+// Per-platform freshness chip. Fixes the old global "last updated" that showed
+// today whenever ANY one platform refreshed, hiding stale/failed platforms.
+function renderStatus(id, row) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const st = (row && row.fetch_status) || 'failed';
+  const succ = row && row.last_success_at;
+  const stale = succ && (Date.now() - new Date(succ).getTime()) > 48 * 3.6e6;
+  let cls = 'ok', label = 'LIVE · ' + relTime(succ);
+  if (st === 'not_connected') { cls = 'warn'; label = 'NOT CONNECTED'; }
+  else if (st === 'failed')   { cls = 'bad';  label = 'FAILED · ' + relTime(succ); }
+  else if (st === 'partial')  { cls = 'warn'; label = 'PARTIAL · ' + relTime(succ); }
+  if ((st === 'ok' || st === 'partial') && stale) { cls = 'bad'; label = 'STALE · ' + relTime(succ); }
+  el.className = 'status-chip ' + cls;
+  el.textContent = label;
+  el.title = (row && row.fetch_error) ? row.fetch_error : label;
+}
+
 function renderSummary() {
   const yt = summaryData.youtube || {};
   const fb = summaryData.facebook || {};
   const ig = summaryData.instagram || {};
 
   // YouTube
-  set('yt-subs', fmt(yt.followers));
-  set('yt-views', fmt(yt.reach_28d));
-  set('yt-watchtime', fmt(Math.round((yt.watch_time_minutes || 0) / 60)));
-  set('yt-videos', fmt(yt.video_views > 0 ? yt.video_views : 0));
+  set('yt-subs', metric(yt.followers));
+  set('yt-views', metric(yt.reach_28d));
+  set('yt-watchtime', yt.watch_time_minutes == null ? '—' : fmt(Math.round(yt.watch_time_minutes / 60)));
+  set('yt-videos', metric(yt.video_count));   // actual video COUNT (was showing total views)
+  renderDelta('yt-subs-delta', yt.followers_delta);
+  renderStatus('yt-status', summaryData.youtube);
 
   // Facebook
-  set('fb-followers', fmt(fb.followers));
-  set('fb-reach', fmt(fb.reach_28d));
-  set('fb-impressions', fmt(fb.impressions_28d));
-  set('fb-engagement', fmt(fb.engagement_total));
+  set('fb-followers', metric(fb.followers));
+  set('fb-reach', metric(fb.reach_28d));
+  set('fb-impressions', metric(fb.impressions_28d));
+  set('fb-engagement', metric(fb.engagement_total));
+  renderDelta('fb-followers-delta', fb.followers_delta);
+  renderStatus('fb-status', summaryData.facebook);
 
   // Instagram
-  set('ig-followers', fmt(ig.followers));
-  set('ig-reach', fmt(ig.reach_28d));
-  set('ig-impressions', fmt(ig.impressions_28d));
-  set('ig-engagement', fmt(ig.engagement_total));
+  set('ig-followers', metric(ig.followers));
+  set('ig-reach', metric(ig.reach_28d));
+  set('ig-impressions', metric(ig.impressions_28d));
+  set('ig-engagement', metric(ig.engagement_total));
+  renderDelta('ig-followers-delta', ig.followers_delta);
+  renderStatus('ig-status', summaryData.instagram);
 
-  // Last updated
-  const times = [yt.last_updated, fb.last_updated, ig.last_updated].filter(Boolean);
-  if (times.length) {
-    const latest = new Date(Math.max(...times.map(t => new Date(t))));
-    document.getElementById('lastUpdated').textContent =
-      'Updated ' + latest.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+  // Header shows the OLDEST successful fetch (worst case), not the newest.
+  const succ = ['youtube', 'facebook', 'instagram']
+    .map(p => summaryData[p] && summaryData[p].last_success_at).filter(Boolean);
+  const hdr = document.getElementById('lastUpdated');
+  if (!succ.length) {
+    hdr.textContent = 'No successful fetch yet';
+  } else {
+    const oldest = new Date(Math.min(...succ.map(t => new Date(t))));
+    hdr.textContent = 'Oldest data ' + relTime(oldest.toISOString());
   }
 }
 
@@ -768,17 +841,53 @@ async function loadCharts() {
 }
 
 // ── Refresh ──
+// Admin key, stored per-browser. The dashboard is public, so the refresh
+// endpoint is token-protected and the key is never embedded in the page.
+function getRefreshKey() {
+  let k = '';
+  try { k = localStorage.getItem('refreshKey') || ''; } catch (e) {}
+  if (!k) {
+    k = prompt('Admin refresh key:') || '';
+    if (k) { try { localStorage.setItem('refreshKey', k); } catch (e) {} }
+  }
+  return k;
+}
+
+async function pollRefresh() {
+  for (let i = 0; i < 40; i++) {            // up to ~2 min
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const s = await (await fetch('/api/refresh/status')).json();
+      if (!s.running) return;
+    } catch (e) {}
+  }
+}
+
 async function triggerRefresh() {
-  if (!confirm('Pull fresh data from all platforms? This may take 30–60 seconds.')) return;
+  const key = getRefreshKey();
+  if (!key) return;
   setLoading(true);
   try {
-    const res = await fetch('/api/refresh', { method: 'POST' });
-    const data = await res.json();
-    if (data.status === 'ok') {
+    // Server runs the fetch in the background and returns immediately (202),
+    // so this no longer trips the gunicorn worker timeout.
+    const res = await fetch('/api/refresh', {
+      method: 'POST',
+      headers: { 'X-Refresh-Token': key, 'Content-Type': 'application/json' },
+    });
+    if (res.status === 401) {
+      try { localStorage.removeItem('refreshKey'); } catch (e) {}
+      alert('Refresh key rejected.'); return;
+    }
+    if (res.status === 503) {
+      alert('Refresh is disabled on the server (REFRESH_TOKEN not set).'); return;
+    }
+    if (res.status === 202 || res.status === 409) {
+      await pollRefresh();
       postsData = {};
       await Promise.all([loadSummary(), loadPosts(currentTab), loadCharts()]);
     } else {
-      alert('Refresh failed: ' + (data.error || 'Unknown error'));
+      const data = await res.json().catch(() => ({}));
+      alert('Refresh failed: ' + (data.error || res.status));
     }
   } catch (e) {
     alert('Network error: ' + e.message);
